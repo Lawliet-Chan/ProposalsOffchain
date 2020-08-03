@@ -15,7 +15,7 @@ const db = require('knex')({
     }
 });
 
-const IBO_TABLE = 'ibo';    //
+const PROPOSALS_TABLE = 'proposals_offchain';
 
 const CREATE_PROPOSAL_CHANGED = 1;
 const UPDATE_PROPOSAL_CHANGED = 2;
@@ -75,7 +75,7 @@ async function main () {
     const api = await ApiPromise.create({ provider, types  });
 
     while(true) {
-        console.log("Listening events....")
+        console.log("Listening events....");
         api.query.system.events((events) => {
             console.log(`\nReceived ${events.length} events:`);
 
@@ -127,17 +127,17 @@ async function handleEvent(eventInfo: EventInfo){
 
     if (isCreate(eventInfo.ProposalChangedType)){
 
-        await db.table(IBO_TABLE).insert(proposal);
+        await db.table(PROPOSALS_TABLE).insert(proposal);
 
     }else if(isUpdate(eventInfo.ProposalChangedType)){
 
-        await db.table(IBO_TABLE)
+        await db.table(PROPOSALS_TABLE)
             .where({id: rowId})
             .update(proposal);
 
     }else if(isDel(eventInfo.ProposalChangedType)){
 
-        await db.table(IBO_TABLE)
+        await db.table(PROPOSALS_TABLE)
             .where({id: rowId})
             .del();
 
@@ -187,6 +187,9 @@ function unsetReviewAndVoteGoals(proposal){
 
 // dev Fake Data
 // console.log("Handle Fake Data");
-// const data = "{\"ProposalChangedType\":1,\"Proposal\":{\"id\":1234,\"proposer\":\"2test_proposer\",\"proposal_type\":\"test_proposal_type\",\"official_website_url\":\"https://www.google.com/\",\"token_icon_url\":\"https://www.google.com/\",\"token_name\":\"test\",\"token_symbol\":\"test\",\"max_supply\":128,\"circulating_supply\":128,\"current_market\":\"test_market\",\"target_market\":\"target_test_market\",\"state\":\"success\",\"review_goals\":[3,4],\"vote_goals\":[3,4],\"rewards_remainder\":128,\"timestamp\":129}}";
+// const data = "{\"ProposalChangedType\":1,\"Proposal\":{\"id\":555,\"proposer\":\"2test_proposer\",\"proposal_type\":\"test_proposal_type\",\"official_website_url\":\"https://www.google.com/\",\"token_icon_url\":\"https://www.google.com/\",\"token_name\":\"test\",\"token_symbol\":\"test\",\"max_supply\":128,\"circulating_supply\":128,\"current_market\":\"test_market\",\"target_market\":\"target_test_market\",\"state\":\"success\",\"review_goals\":[3,4],\"vote_goals\":[3,4],\"rewards_remainder\":128,\"timestamp\":129}}";
 // const eventInfo = JSON.parse(data);
-// handleEvent(eventInfo);
+// handleEvent(eventInfo).then((res) =>{
+//     console.log("Fake Data / END");
+//     process.exit(1);
+// });
