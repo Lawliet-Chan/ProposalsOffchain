@@ -10,7 +10,9 @@
 #### doc:
  status_code - 200:查询正常 500:查询失败  
  error_msg - status_code为500时会返回'查询失败'，可直接抛出  
- query筛选项 - proposer/state
+ api(GET):  
+ 筛选state: /proposals?state=xxx  
+ 筛选proposer: /proposals?proposer=xxx
 ```json
 {
     "status_code": 200,
