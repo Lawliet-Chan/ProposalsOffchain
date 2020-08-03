@@ -2,7 +2,7 @@
 -- Table structure for proposals_offchain
 -- ----------------------------
 
-CREATE TABLE IF EXISTS `proposals_offchain` (
+CREATE TABLE IF NOT EXISTS `proposals_offchain` (
   `id` int(10) unsigned NOT NULL,
   `proposer` varchar(255) NOT NULL,
   `proposal_type` varchar(255) NOT NULL,
