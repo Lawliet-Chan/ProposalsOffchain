@@ -75,7 +75,7 @@ async function main () {
     const api = await ApiPromise.create({ provider, types  });
 
     while(true) {
-        console.log("Listening events....");
+        console.log("Listening events...\n");
         api.query.system.events((events) => {
             console.log(`\nReceived ${events.length} events:`);
 
@@ -84,12 +84,13 @@ async function main () {
                 const { event, phase } = record;
 
                 if (needHandleEvent(event.section, event.method)){
+                    console.log("handle");
                     event.data.forEach((data, index) => {
                         const eventInfo = JSON.parse(data);
                         handleEvent(eventInfo)
                     });
                 }else{
-                    console.log("don't handle")
+                    // console.log("don't handle")
                 }
             });
         });

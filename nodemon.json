@@ -1,5 +1,4 @@
 {
-  "verbose": false,
   "debug": false,
   "exec": "ts-node ./handle_events.js",
   "ignore": [
@@ -13,10 +12,24 @@
     "test/**/*",
     "docs/*"
   ],
+  "inspect": true,
+  "restartable": "rs",
+  "verbose": true,
+  "execMap": {
+    "": "node",
+    "js": "node --harmony"
+  },
   "events": {
+    "start": "",
+    "crash": "",
+    "exit": "",
     "restart": ""
   },
-  "watch": ["./app", "./configs", "./app.ts"],
-  "ext": "ts tsx",
-  "inspect": true
+  "ext": "js json ts tsx",
+  "watch": ["./**"],
+  "env": {
+    "NODE_ENV": "development",
+    "PORT": "3002"
+  },
+  "legacy-watch": false
 }
