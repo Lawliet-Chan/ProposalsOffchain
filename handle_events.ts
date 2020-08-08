@@ -22,12 +22,50 @@ const UPDATE_PROPOSAL_CHANGED = 2;
 const DEL_PROPOSAL_CHANGED = 3;
 
 const types = {
+    "ProposalChangedType": "u8",
     "ProposalId": "u32",
+    "Proposal": {
+        "id": "ProposalId",
+        "proposer": "AccountId",
+        "proposal_type": "ProposalType",
+        "official_website_url": "Vec<u8>",
+        "token_icon_url": "Vec<u8>",
+        "token_name": "Vec<u8>",
+        "token_symbol": "Vec<u8>",
+        "max_supply": "Balance",
+        "circulating_supply": "Balance",
+        "current_market": "MarketType",
+        "target_market": "MarketType",
+        "state": "ProposalState",
+        "review_goals": "(u64, u64)",
+        "vote_goals": "(u64, u64)",
+        "rewards_remainder": "Balance",
+        "timestamp": "u64"
+    },
     "MarketType": {
         "_enum": [
             "Main",
             "Growth",
             "Off"
+        ]
+    },
+    "ProposalType": {
+        "_enum": [
+            "List",
+            "Delist",
+            "Rise",
+            "Fall"
+        ]
+    },
+    "ProposalState": {
+        "_enum": [
+            "Pending",
+            "Reviewing",
+            "Voting",
+            "Approved",
+            "Rejected",
+            "ApprovedClosed",
+            "RejectedClosed"
         ]
     },
     "TokenInfo": {
@@ -36,9 +74,8 @@ const types = {
         "token_symbol": "Vec<u8>",
         "total_issuance": "Balance",
         "total_circulation": "Balance",
-        "current_board": "BoardType"
-    },
-    "ProposalChangedType":"u8",
+        "current_board": "MarketType"
+    }
 };
 
 type Proposal = {
@@ -56,7 +93,7 @@ type Proposal = {
     state: string,
     review_goals: number[],
     vote_goals: number[],
-    rewards_remainder:number,
+    rewards_remainder: number,
     timestamp: number
 };
 
@@ -75,22 +112,31 @@ async function main () {
     const api = await ApiPromise.create({ provider, types  });
 
     while(true) {
-        console.log("Listening events...\n");
+        console.log('\n' + Date().toLocaleString() + "\nListening events...");
         api.query.system.events((events) => {
-            console.log(`\nReceived ${events.length} events:`);
+            console.log(`Received ${events.length} events:`);
 
             events.forEach((record) => {
 
                 const { event, phase } = record;
+                const types = event.typeDef;
 
                 if (needHandleEvent(event.section, event.method)){
                     console.log("handle");
-                    event.data.forEach((data, index) => {
-                        const eventInfo = JSON.parse(data);
-                        handleEvent(eventInfo)
-                    });
+                    let eventInfo: EventInfo;
+
+                    for(let typeKey in event.data){
+                        if (aliveTypes(types, typeKey)){
+                            if (['ProposalChangedType', 'Proposal'].includes(types[typeKey].type)){
+                                const val = event.data[typeKey];
+                                eventInfo = chooseTypePushValToEventInfo(types[typeKey].type, val, eventInfo);
+                            }
+                        }
+                    }
+
+                    handleEvent(eventInfo);
                 }else{
-                    // console.log("don't handle")
+                    console.log("don't handle")
                 }
             });
         });
@@ -109,6 +155,36 @@ function needHandleEvent(eventSection: string, eventMethod: string) {
 
 /**
  *
+ * @param typeKey
+ * @param typeList
+ */
+function aliveTypes(types, typeKey) {
+    return types[typeKey];
+}
+
+/**
+ *
+ * @param type
+ * @param val
+ * @param eventInfo
+ */
+function chooseTypePushValToEventInfo(type, val, eventInfo) {
+    switch (type) {
+        case 'ProposalChangedType':
+            eventInfo = {
+                ...eventInfo,
+                ProposalChangedType: JSON.parse(val),
+            };
+        case 'Proposal':
+            eventInfo = {
+                ...eventInfo,
+                Proposal: JSON.parse(val),
+            };
+    }
+    return eventInfo;
+}
+/**
+ *
  * @param ms: number
  */
 function sleep(ms: number) {
@@ -120,30 +196,38 @@ function sleep(ms: number) {
  * @param eventInfo
  */
 async function handleEvent(eventInfo: EventInfo){
+    if ('Proposal' in eventInfo && 'ProposalChangedType' in eventInfo){
+        let proposal = eventInfo.Proposal;
+        const rowId = eventInfo.Proposal.id;
 
-    let proposal = eventInfo.Proposal;
-    const rowId = eventInfo.Proposal.id;
+        proposal = handleReviewAndVoteGoals(proposal);
 
-    proposal = handleReviewAndVoteGoals(proposal);
+        try {
 
-    if (isCreate(eventInfo.ProposalChangedType)){
+            if (isCreate(eventInfo.ProposalChangedType)){
 
-        await db.table(PROPOSALS_TABLE).insert(proposal);
+                await db.table(PROPOSALS_TABLE).insert(proposal);
 
-    }else if(isUpdate(eventInfo.ProposalChangedType)){
+            }else if(isUpdate(eventInfo.ProposalChangedType)){
 
-        await db.table(PROPOSALS_TABLE)
-            .where({id: rowId})
-            .update(proposal);
+                await db.table(PROPOSALS_TABLE)
+                    .where({id: rowId})
+                    .update(proposal);
 
-    }else if(isDel(eventInfo.ProposalChangedType)){
+            }else if(isDel(eventInfo.ProposalChangedType)){
 
-        await db.table(PROPOSALS_TABLE)
-            .where({id: rowId})
-            .del();
+                await db.table(PROPOSALS_TABLE)
+                    .where({id: rowId})
+                    .del();
 
-    }else {
-        console.log('unknown ProposalChangedType')
+            }else {
+                console.log('unknown ProposalChangedType')
+            }
+
+        }catch(e){
+            throw '-------' + e.sqlMessage + '-------\n';
+        }
+
     }
     return;
 }
@@ -185,12 +269,3 @@ function unsetReviewAndVoteGoals(proposal){
 
 // prod
 main().catch(console.error).finally(() => process.exit());
-
-// dev Fake Data
-// console.log("Handle Fake Data");
-// const data = "{\"ProposalChangedType\":1,\"Proposal\":{\"id\":552,\"proposer\":\"2test_proposer\",\"proposal_type\":\"test_proposal_type\",\"official_website_url\":\"https://www.google.com/\",\"token_icon_url\":\"https://www.google.com/\",\"token_name\":\"test\",\"token_symbol\":\"test\",\"max_supply\":128,\"circulating_supply\":128,\"current_market\":\"test_market\",\"target_market\":\"target_test_market\",\"state\":\"success\",\"review_goals\":[3,4],\"vote_goals\":[3,4],\"rewards_remainder\":128,\"timestamp\":129}}";
-// const eventInfo = JSON.parse(data);
-// handleEvent(eventInfo).then((res) =>{
-//     console.log("Fake Data / END");
-//     process.exit(1);
-// });
