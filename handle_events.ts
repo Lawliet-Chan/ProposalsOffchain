@@ -114,29 +114,26 @@ async function main () {
     while(true) {
         console.log('\n' + Date().toLocaleString() + "\nListening events...");
         api.query.system.events((events) => {
-            console.log(`Received ${events.length} events:`);
-
+            console.log(`Received ${events.length} events`);
             events.forEach((record) => {
 
                 const { event, phase } = record;
                 const types = event.typeDef;
 
                 if (needHandleEvent(event.section, event.method)){
-                    console.log("handle");
+                    console.log("handle ibo event------");
                     let eventInfo: EventInfo;
-
-                    for(let typeKey in event.data){
+                    for(const typeKey in event.data){
                         if (aliveTypes(types, typeKey)){
                             if (['ProposalChangedType', 'Proposal'].includes(types[typeKey].type)){
                                 const val = event.data[typeKey];
-                                eventInfo = chooseTypePushValToEventInfo(types[typeKey].type, val, eventInfo);
+                                eventInfo = chooseTypePushValToEventInfo(types[typeKey].type, JSON.parse(val), eventInfo);
                             }
                         }
                     }
-
                     handleEvent(eventInfo);
                 }else{
-                    console.log("don't handle")
+                    // console.log("don't handle")
                 }
             });
         });
@@ -156,7 +153,7 @@ function needHandleEvent(eventSection: string, eventMethod: string) {
 /**
  *
  * @param typeKey
- * @param typeList
+ * @param types
  */
 function aliveTypes(types, typeKey) {
     return types[typeKey];
@@ -173,13 +170,15 @@ function chooseTypePushValToEventInfo(type, val, eventInfo) {
         case 'ProposalChangedType':
             eventInfo = {
                 ...eventInfo,
-                ProposalChangedType: JSON.parse(val),
+                ProposalChangedType: val,
             };
         case 'Proposal':
             eventInfo = {
                 ...eventInfo,
-                Proposal: JSON.parse(val),
+                Proposal: val,
             };
+        default:
+            // console.log('unknown type key')
     }
     return eventInfo;
 }
@@ -206,7 +205,13 @@ async function handleEvent(eventInfo: EventInfo){
 
             if (isCreate(eventInfo.ProposalChangedType)){
 
-                await db.table(PROPOSALS_TABLE).insert(proposal);
+                //  knex unsupported ignore
+                await db.raw(
+                    db(PROPOSALS_TABLE)
+                    .insert(proposal)
+                    .toString()
+                    .replace(/^insert/i, 'insert ignore')
+                );
 
             }else if(isUpdate(eventInfo.ProposalChangedType)){
 
