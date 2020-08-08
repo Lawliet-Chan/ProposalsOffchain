@@ -183,11 +183,11 @@ function unsetReviewAndVoteGoals(proposal){
 }
 
 // prod
-// main().catch(console.error).finally(() => process.exit());
+main().catch(console.error).finally(() => process.exit());
 
 // dev Fake Data
 // console.log("Handle Fake Data");
-// const data = "{\"ProposalChangedType\":1,\"Proposal\":{\"id\":555,\"proposer\":\"2test_proposer\",\"proposal_type\":\"test_proposal_type\",\"official_website_url\":\"https://www.google.com/\",\"token_icon_url\":\"https://www.google.com/\",\"token_name\":\"test\",\"token_symbol\":\"test\",\"max_supply\":128,\"circulating_supply\":128,\"current_market\":\"test_market\",\"target_market\":\"target_test_market\",\"state\":\"success\",\"review_goals\":[3,4],\"vote_goals\":[3,4],\"rewards_remainder\":128,\"timestamp\":129}}";
+// const data = "{\"ProposalChangedType\":1,\"Proposal\":{\"id\":552,\"proposer\":\"2test_proposer\",\"proposal_type\":\"test_proposal_type\",\"official_website_url\":\"https://www.google.com/\",\"token_icon_url\":\"https://www.google.com/\",\"token_name\":\"test\",\"token_symbol\":\"test\",\"max_supply\":128,\"circulating_supply\":128,\"current_market\":\"test_market\",\"target_market\":\"target_test_market\",\"state\":\"success\",\"review_goals\":[3,4],\"vote_goals\":[3,4],\"rewards_remainder\":128,\"timestamp\":129}}";
 // const eventInfo = JSON.parse(data);
 // handleEvent(eventInfo).then((res) =>{
 //     console.log("Fake Data / END");

@@ -2,10 +2,8 @@
 `npm install`
 #### 启动http服务，端口号：8081
 `node http_service.ts`
-#### 编译监听服务ts代码
-`tsc handle_events.ts`
-#### 开启监听服务
-`node handle_events.js`
+#### 启动热更新监听服务
+`nodemon -e ts,tsx --exec ts-node handle_events.ts`
 
 #### doc:
  status_code - 200:查询正常 500:查询失败  
