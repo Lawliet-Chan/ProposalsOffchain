@@ -21,6 +21,13 @@ const CREATE_PROPOSAL_CHANGED = 1;
 const UPDATE_PROPOSAL_CHANGED = 2;
 const DEL_PROPOSAL_CHANGED = 3;
 
+const HEX_TO_STR_FIELD = [
+    'official_website_url',
+    'token_icon_url',
+    'token_name',
+    'token_symbol',
+];
+
 const types = {
     "ProposalChangedType": "u8",
     "ProposalId": "u32",
@@ -141,12 +148,13 @@ async function main () {
     }
 }
 
+
 /**
  * section eq ibo AND method eq ProposalChanged
  * @param eventSection: string
  * @param eventMethod: string
  */
-function needHandleEvent(eventSection: string, eventMethod: string) {
+function needHandleEvent(eventSection: string, eventMethod: string): boolean {
  return 'ibo' === eventSection && 'ProposalChanged' === eventMethod;
 }
 
@@ -155,7 +163,7 @@ function needHandleEvent(eventSection: string, eventMethod: string) {
  * @param typeKey
  * @param types
  */
-function aliveTypes(types, typeKey) {
+function aliveTypes(types, typeKey): string {
     return types[typeKey];
 }
 
@@ -186,7 +194,7 @@ function chooseTypePushValToEventInfo(type, val, eventInfo) {
  *
  * @param ms: number
  */
-function sleep(ms: number) {
+function sleep(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
@@ -194,13 +202,13 @@ function sleep(ms: number) {
  *
  * @param eventInfo
  */
-async function handleEvent(eventInfo: EventInfo){
+async function handleEvent(eventInfo: EventInfo): Promise<null>{
     if ('Proposal' in eventInfo && 'ProposalChangedType' in eventInfo){
         let proposal = eventInfo.Proposal;
         const rowId = eventInfo.Proposal.id;
 
         proposal = handleReviewAndVoteGoals(proposal);
-
+        proposal = handleVueU8ToStr(proposal);
         try {
 
             if (isCreate(eventInfo.ProposalChangedType)){
@@ -237,15 +245,41 @@ async function handleEvent(eventInfo: EventInfo){
     return;
 }
 
-function isCreate(type: number) {
+/**
+ * 
+ * @param proposal
+ */
+function handleVueU8ToStr(proposal) {
+    for (const field of HEX_TO_STR_FIELD){
+        proposal[field] = hexToStr(proposal[field]);
+    }
+    return proposal;
+}
+
+/**
+ * transform to Str
+ * @param hex
+ */
+function hexToStr(hex): string {
+    let arr = hex.split("");
+    let out = "";
+    for (let i = 0; i < arr.length / 2; i++) {
+        let tmp = "0x" + arr[i * 2] + arr[i * 2 + 1];
+        let charValue = String.fromCharCode(Number(tmp));
+        out += charValue
+    }
+    return out.replace('\u0000', '');
+}
+
+function isCreate(type: number): boolean {
     return type === CREATE_PROPOSAL_CHANGED;
 }
 
-function isUpdate(type: number) {
+function isUpdate(type: number): boolean {
     return type === UPDATE_PROPOSAL_CHANGED;
 }
 
-function isDel(type: number) {
+function isDel(type: number): boolean {
     return type === DEL_PROPOSAL_CHANGED;
 }
 
