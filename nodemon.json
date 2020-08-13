@@ -1,35 +1,5 @@
 {
-  "debug": false,
-  "exec": "ts-node ./handle_events.js",
-  "ignore": [
-    "mochawesome-report",
-    "node_modules",
-    "./test",
-    "**/*.d.ts",
-    "*.test.ts",
-    "*.spec.ts",
-    "fixtures/*",
-    "test/**/*",
-    "docs/*"
-  ],
-  "inspect": true,
-  "restartable": "rs",
-  "verbose": true,
-  "execMap": {
-    "": "node",
-    "js": "node --harmony"
-  },
-  "events": {
-    "start": "",
-    "crash": "",
-    "exit": "",
-    "restart": ""
-  },
-  "ext": "js json ts tsx",
-  "watch": ["./**"],
-  "env": {
-    "NODE_ENV": "development",
-    "PORT": "3002"
-  },
-  "legacy-watch": false
+  "watch": ["."],
+  "ext": "ts",
+  "exec": "ts-node"
 }

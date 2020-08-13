@@ -2,7 +2,7 @@
 
 const express = require('express');
 
-const app = express();
+export const app = express();
 
 const TABLE = 'proposals_offchain';
 
@@ -47,8 +47,6 @@ app.get('/proposals', async function (req, resp) {
     }).end();
 });
 
-async function findAll(query){
+async function findAll(query) {
     return dbConnect.table(TABLE).where(query).select();
 }
-
-app.listen(8081);

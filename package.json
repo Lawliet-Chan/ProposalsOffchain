@@ -1,11 +1,25 @@
 {
   "name": "polkadot",
   "version": "1.0.0",
+  "scripts": {
+    "compile": "ts-node build.ts && tsc",
+    "dev": "nodemon server/app.ts | pino-pretty"
+  },
   "dependencies": {
     "@polkadot/api": "^1.26.1",
     "express": "^4.17.1",
     "knex": "^0.21.2",
     "mysql": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "@types/pino": "^5.8.13",
+    "nodemon": "^1.19.4",
+    "pino-pretty": "^3.3.0",
+    "shelljs": "^0.8.3",
+    "ts-lint": "^4.5.1",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2"
+  }
 }

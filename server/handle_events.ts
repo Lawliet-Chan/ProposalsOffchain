@@ -31,6 +31,13 @@ const HEX_TO_STR_FIELD = [
 const types = {
     "ProposalChangedType": "u8",
     "ProposalId": "u32",
+    "StakingInfo": {
+        "proposal_id": "ProposalId",
+        "staking_amount": "Balance",
+        "age_idx": "u8",
+        "wheather_received_reward": "bool",
+        "timestamp": "u64"
+    },
     "Proposal": {
         "id": "ProposalId",
         "proposer": "AccountId",
@@ -45,7 +52,7 @@ const types = {
         "target_market": "MarketType",
         "state": "ProposalState",
         "review_goals": "(u64, u64)",
-        "vote_goals": "(u64, u64)",
+        "vote_goals": "(u128, u128)",
         "rewards_remainder": "Balance",
         "timestamp": "u64"
     },
@@ -113,39 +120,34 @@ type EventInfo = {
  *
  * @returns {Promise<void>}
  */
-async function main () {
+export async function handle_events() {
     const provider = new WsProvider('ws://127.0.0.1:9944');
 
-    const api = await ApiPromise.create({ provider, types  });
+    const api = await ApiPromise.create({ provider, types });
+    api.query.system.events((events) => {
+        console.log(`Received ${events.length} events`);
+        events.forEach((record) => {
 
-    while(true) {
-        console.log('\n' + Date().toLocaleString() + "\nListening events...");
-        api.query.system.events((events) => {
-            console.log(`Received ${events.length} events`);
-            events.forEach((record) => {
+            const { event, phase } = record;
+            const types = event.typeDef;
 
-                const { event, phase } = record;
-                const types = event.typeDef;
-
-                if (needHandleEvent(event.section, event.method)){
-                    console.log("handle ibo event------");
-                    let eventInfo: EventInfo;
-                    for(const typeKey in event.data){
-                        if (aliveTypes(types, typeKey)){
-                            if (['ProposalChangedType', 'Proposal'].includes(types[typeKey].type)){
-                                const val = event.data[typeKey];
-                                eventInfo = chooseTypePushValToEventInfo(types[typeKey].type, JSON.parse(val), eventInfo);
-                            }
+            if (needHandleEvent(event.section, event.method)) {
+                console.log("handle ibo event------");
+                let eventInfo: EventInfo;
+                for (const typeKey in event.data) {
+                    if (aliveTypes(types, typeKey)) {
+                        if (['ProposalChangedType', 'Proposal'].includes(types[typeKey].type)) {
+                            const val = event.data[typeKey];
+                            eventInfo = chooseTypePushValToEventInfo(types[typeKey].type, JSON.parse(val), eventInfo);
                         }
                     }
-                    handleEvent(eventInfo);
-                }else{
-                    // console.log("don't handle")
                 }
-            });
+                handleEvent(eventInfo);
+            } else {
+                // console.log("don't handle")
+            }
         });
-        await sleep(3000)
-    }
+    });
 }
 
 
@@ -155,7 +157,7 @@ async function main () {
  * @param eventMethod: string
  */
 function needHandleEvent(eventSection: string, eventMethod: string): boolean {
- return 'ibo' === eventSection && 'ProposalChanged' === eventMethod;
+    return 'ibo' === eventSection && 'ProposalChanged' === eventMethod;
 }
 
 /**
@@ -186,7 +188,7 @@ function chooseTypePushValToEventInfo(type, val, eventInfo) {
                 Proposal: val,
             };
         default:
-            // console.log('unknown type key')
+        // console.log('unknown type key')
     }
     return eventInfo;
 }
@@ -202,8 +204,8 @@ function sleep(ms: number): Promise<any> {
  *
  * @param eventInfo
  */
-async function handleEvent(eventInfo: EventInfo): Promise<null>{
-    if ('Proposal' in eventInfo && 'ProposalChangedType' in eventInfo){
+async function handleEvent(eventInfo: EventInfo): Promise<null> {
+    if ('Proposal' in eventInfo && 'ProposalChangedType' in eventInfo) {
         let proposal = eventInfo.Proposal;
         const rowId = eventInfo.Proposal.id;
 
@@ -211,33 +213,33 @@ async function handleEvent(eventInfo: EventInfo): Promise<null>{
         proposal = handleVueU8ToStr(proposal);
         try {
 
-            if (isCreate(eventInfo.ProposalChangedType)){
+            if (isCreate(eventInfo.ProposalChangedType)) {
 
                 //  knex unsupported ignore
                 await db.raw(
                     db(PROPOSALS_TABLE)
-                    .insert(proposal)
-                    .toString()
-                    .replace(/^insert/i, 'insert ignore')
+                        .insert(proposal)
+                        .toString()
+                        .replace(/^insert/i, 'insert ignore')
                 );
 
-            }else if(isUpdate(eventInfo.ProposalChangedType)){
+            } else if (isUpdate(eventInfo.ProposalChangedType)) {
 
                 await db.table(PROPOSALS_TABLE)
-                    .where({id: rowId})
+                    .where({ id: rowId })
                     .update(proposal);
 
-            }else if(isDel(eventInfo.ProposalChangedType)){
+            } else if (isDel(eventInfo.ProposalChangedType)) {
 
                 await db.table(PROPOSALS_TABLE)
-                    .where({id: rowId})
+                    .where({ id: rowId })
                     .del();
 
-            }else {
+            } else {
                 console.log('unknown ProposalChangedType')
             }
 
-        }catch(e){
+        } catch (e) {
             throw '-------' + e.sqlMessage + '-------\n';
         }
 
@@ -250,7 +252,7 @@ async function handleEvent(eventInfo: EventInfo): Promise<null>{
  * @param proposal
  */
 function handleVueU8ToStr(proposal) {
-    for (const field of HEX_TO_STR_FIELD){
+    for (const field of HEX_TO_STR_FIELD) {
         proposal[field] = hexToStr(proposal[field]);
     }
     return proposal;
@@ -289,7 +291,7 @@ function handleReviewAndVoteGoals(proposal: Proposal) {
     return proposal;
 }
 
-function appendReviewAndVoteGoalsItemsToProposal(proposal){
+function appendReviewAndVoteGoalsItemsToProposal(proposal) {
     proposal = {
         ...proposal,
         review_supporters_goals: proposal.review_goals[0],
@@ -300,11 +302,8 @@ function appendReviewAndVoteGoalsItemsToProposal(proposal){
     return proposal;
 }
 
-function unsetReviewAndVoteGoals(proposal){
+function unsetReviewAndVoteGoals(proposal) {
     delete proposal.review_goals;
     delete proposal.vote_goals;
     return proposal;
 }
-
-// prod
-main().catch(console.error).finally(() => process.exit());
