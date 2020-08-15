@@ -1,7 +1,7 @@
 module.exports = {
-    host: '39.102.77.38',
-    db_name: 'test1_highwayman',
-    db_user: 'test1_highwayman',
-    db_password: 'tCmsL3CNwmsEeEtA',
+    host: '8.210.190.83',
+    db_name: 'ibo_offchain',
+    db_user: 'root',
+    db_password: 'Root*123',
     db_port: '3306',
 };

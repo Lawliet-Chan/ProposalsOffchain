@@ -240,7 +240,8 @@ async function handleEvent(eventInfo: EventInfo): Promise<null> {
             }
 
         } catch (e) {
-            throw '-------' + e.sqlMessage + '-------\n';
+            // throw '-------' + e.sqlMessage + '-------\n';
+	    console.error(e);
         }
 
     }
