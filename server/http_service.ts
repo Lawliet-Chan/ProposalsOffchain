@@ -6,7 +6,7 @@ export const app = express();
 
 const TABLE = 'proposals_offchain';
 
-const dbConfig = require('./db_config');
+const dbConfig = require('../db_config');
 
 const dbConnect = require('knex')({
     client: 'mysql',

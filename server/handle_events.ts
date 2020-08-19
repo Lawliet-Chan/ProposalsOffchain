@@ -2,7 +2,7 @@
 
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 
-const config = require('./db_config');
+const config = require('../db_config');
 
 const db = require('knex')({
     client: 'mysql',
@@ -241,7 +241,7 @@ async function handleEvent(eventInfo: EventInfo): Promise<null> {
 
         } catch (e) {
             // throw '-------' + e.sqlMessage + '-------\n';
-	    console.error(e);
+            console.error(e);
         }
 
     }
