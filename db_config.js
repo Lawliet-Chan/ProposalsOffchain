@@ -1,5 +1,5 @@
 module.exports = {
-    host: '8.210.190.83',
+    host: '127.0.0.1',
     db_name: 'ibo_offchain',
     db_user: 'root',
     db_password: 'Root*123',
